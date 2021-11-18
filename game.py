@@ -47,7 +47,7 @@ def make_board():
     return dictionary
 
 
-def print_board(board, character=None):
+def print_board(board, character):
     count = 0
     symbols = {"wall": " 🈵 ", "mystery": " ✳️ ", "none": " ⏹ ", "boss": " ⚠️ "}
     print()
@@ -60,6 +60,15 @@ def print_board(board, character=None):
         if count >= math.sqrt(len(board)):
             count = 0
             print()
+            quick_sleep(0.1)
+
+
+def check_if_boss(board, character):
+    room = (character["X-coordinate"], character["Y-coordinate"])
+    if board[room] == "boss":
+        print("fight the boss")
+        return True
+    return False
 
 
 def make_character():
@@ -75,22 +84,24 @@ def make_character():
     character = {}
     classes = get_class_names()
 
-    character["name"] = input("Enter your characters name: ")
+    character["name"] = input("\nEnter your characters name: ")
     print('These are the available classes:')
+    quick_sleep()
     for count, a_class in enumerate(classes, 1):
         print(count, a_class)
-    character["class"] = classes[int(input("Choose a class:")) - 1]
+        quick_sleep(0.5)
+    character["class"] = classes[int(input("Choose a class: ")) - 1]
     character_attack_defense_levels = get_class_attack_defense_levels(character["class"])
     character["level"] = 1
     character["currentHP"] = 10.0
     character["weapon"] = 'melee'
     character["maxHP"] = 10.0
     character['currentXP'] = 0
-    character["X-coordinate"] = 0
-    character["Y-coordinate"] = 0
-    character['accuracy'] = character_attack_defense_levels[0]
-    character['strength'] = character_attack_defense_levels[1]
-    character['resistance'] = character_attack_defense_levels[2]
+    character["X-coordinate"] = 23
+    character["Y-coordinate"] = 3
+    character['accuracy'] = character_attack_defense_levels[0] * 4
+    character['strength'] = character_attack_defense_levels[1] * 4
+    character['resistance'] = character_attack_defense_levels[2] * 4
 
     return character
 
@@ -109,26 +120,33 @@ def enemy_generator(level: int) -> dict:
         return random.choice(level_two_enemies)
     elif level == 2:
         return random.choice(level_three_enemies)
+    elif level == 3:
+        return generate_boss_enemy("Final Boss", "Swords and Lances")
 
 
 def generate_level_one_enemy(name: str, weapon: str):
     return {'name': name, 'weapon': weapon, 'accuracy': 0.33, 'resistance': 0.33,
-            'strength': 0.33, 'currentHP': 2}
+            'strength': 0.33, 'currentHP': 2, 'is_boss': False}
 
 
 def generate_level_two_enemy(name: str, weapon: str):
     return {'name': name, 'weapon': weapon, 'accuracy': 0.66, 'resistance': 0.66,
-            'strength': 0.66, 'currentHP': 4}
+            'strength': 0.66, 'currentHP': 4, 'is_boss': False}
 
 
 def generate_level_three_enemy(name: str, weapon: str):
-    return {'name': name, 'weapon': weapon, 'accuracy': 0.99, 'resistance': 0.99,
-            'strength': 0.99, 'currentHP': 6}
+    return {'name': name, 'weapon': weapon, 'accuracy': 1.0, 'resistance': 1.5,
+            'strength': 1.5, 'currentHP': 1.5, 'is_boss': False}
+
+
+def generate_boss_enemy(name: str, weapon: str):
+    return {'name': name, 'weapon': weapon, 'accuracy': 1.0, 'resistance': 3.0,
+            'strength': 3.0, 'currentHP': 8, 'is_boss': True}
 
 
 def increase_level(character: dict):
-    level_increase_xp = 100
-    skill_multiplier = 1.5
+    level_increase_xp = 50
+    skill_multiplier = 2
 
     if character['currentXP'] >= level_increase_xp:
         character['currentXP'] -= level_increase_xp
@@ -136,6 +154,8 @@ def increase_level(character: dict):
         character['accuracy'] *= skill_multiplier
         character['strength'] *= skill_multiplier
         character['resistance'] *= skill_multiplier
+        print("You have now leveled up to {}".format(character['level']))
+        print("You have 50% more accuracy, strength, and resistance")
 
     return
 
@@ -183,6 +203,7 @@ def describe_current_location(character):
     :postcondition: print character coordinates and room description
     """
     print("Your Coordinates are:")
+    quick_sleep(0.5)
     print("X:", character["X-coordinate"], "Y:", character["Y-coordinate"])
     print()
     # print(board[character["X-coordinate"], character["Y-coordinate"]])
@@ -196,15 +217,15 @@ def get_user_choice():
     :return: a string value 1 (North),2 (East),3 (West),4 (South)
     """
     print("list of directions:")
-    for number, direction in enumerate(list_of_directions(), 1):
-        print(number, direction)
+    for letter, direction in zip(direction_commands(), list_of_directions()):
+        print(letter, direction)
 
     choice_is_valid = False
     choice = 0
 
     while not choice_is_valid:
-        choice = input("\nPls enter a choice between 1 and 4: ")
-        choice_is_valid = str(choice).strip().isdigit() and str(choice) in "1234"
+        choice = input("\nPls enter a valid choice: ")
+        choice_is_valid = str(choice).strip().isalpha() and str(choice) in "wasd"
 
     return choice
 
@@ -234,24 +255,25 @@ def validate_move(rows, columns, board, character, direction):
     False
     """
     direction = str(direction)
+    direction_commands_list = direction_commands()
     proposed_position = (character["X-coordinate"], character["Y-coordinate"])
 
-    if direction == "1":
+    if direction == direction_commands_list[0]:
         position = (character["X-coordinate"], character["Y-coordinate"] - 1)
         is_wall = check_wall(position, board)
         return not is_wall
 
-    elif direction == "2":
+    elif direction == direction_commands_list[1]:
         position = (character["X-coordinate"] + 1, character["Y-coordinate"])
         is_wall = check_wall(position, board)
         return not is_wall
 
-    elif direction == "3":
+    elif direction == direction_commands_list[2]:
         position = (character["X-coordinate"] - 1, character["Y-coordinate"])
         is_wall = check_wall(position, board)
         return not is_wall
 
-    elif direction == "4":
+    elif direction == direction_commands_list[3]:
         position = (character["X-coordinate"], character["Y-coordinate"] + 1)
         is_wall = check_wall(position, board)
         return not is_wall
@@ -270,6 +292,7 @@ def check_wall(character_position, board):
     else:
         return True
 
+
 def move_character(character, direction):
     """
     Move game character.
@@ -281,21 +304,25 @@ def move_character(character, direction):
     :postcondition: Update the characters location
     """
     direction = str(direction)
-    if direction == "1":
+    if direction == "w":
         character["Y-coordinate"] -= 1
 
-    if direction == "2":
+    if direction == "d":
         character["X-coordinate"] += 1
 
-    if direction == "3":
+    if direction == "a":
         character["X-coordinate"] -= 1
 
-    if direction == "4":
+    if direction == "s":
         character["Y-coordinate"] += 1
 
 
 def list_of_directions():
-    return ['north', 'east', 'west', 'south']
+    return ['Up', 'Right', 'Left', 'Down']
+
+
+def direction_commands():
+    return ['w', 'd', 'a', 's']
 
 
 def check_if_goal_attained(rows, columns, character):
@@ -333,35 +360,43 @@ def check_for_foes():
     :postcondition: return a random boolean representing if you encounter a foe
     :return: a boolean. true if the character runs into an enemy
     """
-    return random.choices((True, False), weights=[20, 80])[0]
+    return random.choices((True, False), weights=[50, 50])[0]
 
 
 def run_fight(character: dict, foe: dict):
     if fight_or_flee():
-        attack_foe(character, foe)
+        fight(character, foe)
     else:
         character_flees(character, foe)
 
 
 def fight_or_flee():
-    print('Would you like to:\n1. Fight\n2. Flee')
+    print('\nWould you like to:\n1. Fight\n2. Flee')
 
-    fight_choice = int(input("Pls enter the corresponding number:"))
-    return fight_choice == 1
+    choice_is_valid = False
+    fight_choice = 0
+
+    while not choice_is_valid:
+        fight_choice = input("Pls enter the corresponding number:")
+        choice_is_valid = str(fight_choice).strip().isdigit() and str(fight_choice) in "12"
+
+    return int(fight_choice) == 1
 
 
-def quick_sleep():
-    time.sleep(1)
+def quick_sleep(timer: float = 1.0):
+    time.sleep(timer)
 
 
-def attack_foe(character: dict, foe: dict):
+def fight(character: dict, foe: dict) -> bool:
     character_run_away = False
 
     while foe["currentHP"] > 0 and not character_run_away:
-        print("\nNew round begins!")
+        print("\nNew round begins!\n")
         quick_sleep()
 
-        if random.choices((True, False), weights=[foe['accuracy'] * 100, (1 - foe['accuracy']) * 100])[0]:
+        if \
+        random.choices((True, False), weights=[foe['accuracy'] * 100, (1 - foe['accuracy']) * 100])[
+            0]:
             foe_strikes(character, foe)
             quick_sleep()
         else:
@@ -375,15 +410,18 @@ def attack_foe(character: dict, foe: dict):
             print("\nYou miss {}".format(foe['name']))
             quick_sleep()
 
-        print_enemy_stats(foe)
-        print_character_stats(character)
         if foe["currentHP"] < 0.1:
             foe["currentHP"] = 0
             print("\nYou devastated {}.".format(foe['name']))
+            return True
 
         else:
-            character_run_away = False if int(input("\nKeep fighting or flee?\n1. Fight\n2. Flee\n")) == 1 \
-                else True
+            print_enemy_stats(foe)
+            print_character_stats(character, foe['is_boss'])
+            if not foe['is_boss']:
+                character_run_away = False if int(input("\nKeep fighting or flee?\n1. Fight\n2. "
+                                                        "Flee\n")) == 1 \
+                    else True
     if character_run_away:
         character_flees(character, foe)
 
@@ -392,29 +430,68 @@ def foe_strikes(character: dict, foe: dict):
     damage = round(foe['strength'] / character['resistance'], 2)
     character["currentHP"] -= damage
     character["currentXP"] += 1
-    print("\n{} strikes you with {}\n{} does {} damage".format(foe['name'], foe['weapon'],
-                                                               foe['name'],
-                                                               damage))
+    print(red_text("{} strikes you with {}\n{} does {} damage\n".format(foe['name'],
+                                                                          foe['weapon'],
+                                                                        foe['name'],
+                                                                        damage)))
 
 
-def character_strikes(character: dict, foe:dict):
+def character_strikes(character: dict, foe: dict):
     damage = round(character['strength'] / foe['resistance'], 2)
     foe["currentHP"] -= damage
     character["currentXP"] += 3
-    print("\nYou struck {}\nYou did {} damage".format(foe['name'], damage))
+    # print(" Bright Green  \n")
+    # print("")
 
-def print_character_stats(character: dict):
+    print(green_text("You struck {}\nYou did {} damage\n".format(foe['name'], damage)))
+
+
+def green_text(text):
+    return "\033[1;32;40m{}\033[0m".format(text)
+
+
+def green_bg(text):
+    return "\033[0;37;42m{}\033[0m".format(text)
+
+
+def red_text(text):
+    return "\033[1;31;40m{}\033[0m".format(text)
+
+
+def red_bg(text):
+    return "\033[0;37;41m{}\033[0m".format(text)
+
+
+def print_game_start():
+    print("So boom, You're awoken by the sound of loud thunders.")
+    quick_sleep(3)
+    print("You have 10hp.")
+    quick_sleep()
+    print("Your goal is to get to the north east end of the map and defeat the boss.")
+    quick_sleep(3)
+    print("Follow the prompts provided by the game to get started.")
+    quick_sleep(3)
+    print("Bon Voyage!!")
+    quick_sleep()
+    print("🚹 - Your character")
+    print("🈵 - Walls")
+    print("✳️ - Find out??")
+    print("⚠️ - Final Boss")
+
+
+def print_character_stats(character: dict, is_boss: bool = False):
     print("\nYou now have:")
-    print("{} HP".format(character["currentHP"], ".2f"))
+    print("{:.2f} HP".format(character["currentHP"]))
     print("{} XP".format(character["currentXP"]))
-    print("\nYou are level {}.\nYou need to have 100 XP to advance to the next level".
-          format(character["level"]))
+    if not is_boss:
+        print("\nYou are level {}.\nYou need to have 50 XP to advance to the next level".
+              format(character["level"]))
     quick_sleep()
 
 
 def print_enemy_stats(foe: dict):
     print("\nYour enemy has:")
-    print("{} HP".format(foe["currentHP"], ".2f"))
+    print("{:.2f} HP".format(foe["currentHP"]))
     quick_sleep()
 
 
@@ -479,33 +556,38 @@ def game():
     """
     Runs the game loop.
     """
+    print_game_start()
     game_board = make_board()
     character = make_character()
-
+    print_board(game_board, character)
     defeated_boss = False
+
     while not defeated_boss and character["currentHP"] > 0:
-        print_board(game_board, character)
+        increase_level(character)
         describe_current_location(character)
         direction = get_user_choice()
         valid_move = validate_move(25, 25, game_board, character, direction)
         if valid_move:
             move_character(character, direction)
-            there_is_a_challenger = check_for_foes()
-            print("is challenger", there_is_a_challenger)
-            if there_is_a_challenger:
-                run_fight(character, enemy_generator(0))
-            defeated_boss = False
+            print_board(game_board, character)
+            boss_in_room = check_if_boss(game_board, character)
+            if boss_in_room:
+                print("Fight boss")
+                defeated_boss = fight(character, enemy_generator(3))
+            else:
+                there_is_a_challenger = check_for_foes()
+                # print("is challenger", there_is_a_challenger)
+                if there_is_a_challenger:
+                    run_fight(character, enemy_generator(0))
+    if defeated_boss:
+        print(
+            "Congrats! you have made it to the end. you are now free to return back to the real world and live your merry life")
     # game_board = make_board()
     # print_board(game_board, 25)
     # game_character = make_character()
     # enemy = enemy_generator(0)
     # # print(fight_or_flee())
     # attack_foe(game_character, enemy)
-
-
-
-
-
 
     # board = make_board(rows, columns)
     # character = make_character()
