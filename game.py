@@ -7,6 +7,7 @@ All of your code must go in this file.
 import random
 import sys
 import time
+import math
 
 
 def make_board():
@@ -46,16 +47,17 @@ def make_board():
     return dictionary
 
 
-def print_board(board, rows, character=None):
+def print_board(board, character=None):
     count = 0
     symbols = {"wall": " 🈵 ", "mystery": " ✳️ ", "none": " ⏹ ", "boss": " ⚠️ "}
+    print()
     for room in board:
         count += 1
         if room == (character["X-coordinate"], character["Y-coordinate"]):
             print(" 🚹 ", end='')
         else:
             print(symbols[board[room]], end='')
-        if count >= rows:
+        if count >= math.sqrt(len(board)):
             count = 0
             print()
 
@@ -170,7 +172,7 @@ def get_class_attack_defense_levels(class_name: str) -> list:
     return class_attack_defense[class_name]
 
 
-def describe_current_location(board, character):
+def describe_current_location(character):
     """
     Print characters location (X,Y) and description of location.
 
@@ -182,6 +184,7 @@ def describe_current_location(board, character):
     """
     print("Your Coordinates are:")
     print("X:", character["X-coordinate"], "Y:", character["Y-coordinate"])
+    print()
     # print(board[character["X-coordinate"], character["Y-coordinate"]])
 
 
@@ -192,8 +195,7 @@ def get_user_choice():
     :postcondition: return a validated string representing the users direction choice
     :return: a string value 1 (North),2 (East),3 (West),4 (South)
     """
-    directions = ['north', 'east', 'south', 'west']
-
+    print("list of directions:")
     for number, direction in enumerate(list_of_directions(), 1):
         print(number, direction)
 
@@ -237,29 +239,21 @@ def validate_move(rows, columns, board, character, direction):
     if direction == "1":
         position = (character["X-coordinate"], character["Y-coordinate"] - 1)
         is_wall = check_wall(position, board)
-        is_out_bounds = character["Y-coordinate"] - 1 < 0
-        print(is_wall)
         return not is_wall
 
     elif direction == "2":
         position = (character["X-coordinate"] + 1, character["Y-coordinate"])
         is_wall = check_wall(position, board)
-        is_out_bounds = character["X-coordinate"] + 1 > rows - 1
-        print(is_wall)
         return not is_wall
 
     elif direction == "3":
         position = (character["X-coordinate"] - 1, character["Y-coordinate"])
         is_wall = check_wall(position, board)
-        is_out_bounds = character["X-coordinate"] - 1 < 0
-        print(is_wall)
         return not is_wall
 
     elif direction == "4":
         position = (character["X-coordinate"], character["Y-coordinate"] + 1)
         is_wall = check_wall(position, board)
-        is_out_bounds = character["Y-coordinate"] + 1 > columns - 1
-        print(is_wall)
         return not is_wall
 
     return True
@@ -340,6 +334,13 @@ def check_for_foes():
     :return: a boolean. true if the character runs into an enemy
     """
     return random.choices((True, False), weights=[20, 80])[0]
+
+
+def run_fight(character: dict, foe: dict):
+    if fight_or_flee():
+        attack_foe(character, foe)
+    else:
+        character_flees(character, foe)
 
 
 def fight_or_flee():
@@ -480,14 +481,20 @@ def game():
     """
     game_board = make_board()
     character = make_character()
+
     defeated_boss = False
     while not defeated_boss and character["currentHP"] > 0:
-        print_board(game_board, 25, character)
-        print(character["X-coordinate"], character["Y-coordinate"])
+        print_board(game_board, character)
+        describe_current_location(character)
         direction = get_user_choice()
         valid_move = validate_move(25, 25, game_board, character, direction)
         if valid_move:
             move_character(character, direction)
+            there_is_a_challenger = check_for_foes()
+            print("is challenger", there_is_a_challenger)
+            if there_is_a_challenger:
+                run_fight(character, enemy_generator(0))
+            defeated_boss = False
     # game_board = make_board()
     # print_board(game_board, 25)
     # game_character = make_character()
