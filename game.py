@@ -386,7 +386,7 @@ def validate_move(board, character, direction):
     :param direction: a string representing the direction the user wishes to move in
     :precondition: board is a valid game_board created using the make_board function
     :precondition: character is a valid dictionary representing the game character
-    :precondition: direction is a valid string 1,2,3, or 4
+    :precondition: direction is a valid string w,a,s, or d
     :postcondition: check if the users intended move is valid
     :return: return a boolean True if the move is valid, false if the move is invalid
 
@@ -518,6 +518,7 @@ def start_fight(character: dict, foe: dict):
         character_flees(character, foe)
     return
 
+
 def fight_or_flee():
     """
     Get user choice to fight or flee
@@ -572,8 +573,7 @@ def fight(character: dict, foe: dict) -> bool:
             print("You miss {}".format(foe['name']))
             quick_sleep()
 
-        if foe["currentHP"] < 0.1:
-            foe["currentHP"] = 0
+        if foe["currentHP"] < 0:
             print("\nYou Killed {}.".format(foe['name']))
             print_character_stats(character)
             return True
@@ -651,7 +651,7 @@ def validate_num_choice(ask_input_string: str, max_choice: int) -> str:
 
 def select_attack(character):
     """
-    Select a weapon from the available weapons
+    Select a weapon from the available weapons.
 
     :param character: a string to present to the user, asking for their input
     :precondition: character must be a valid dictionary representation of the game character
@@ -721,6 +721,7 @@ def print_game_start():
     print("🚹 - Your character")
     print("🈵 - Walls")
     print("⚠️ - Final Boss")
+    return
 
 
 def print_character_stats(character: dict, is_boss: bool = False):
@@ -771,32 +772,6 @@ def check_foe_flees():
     """
     foe_flees = random.choices((True, False), weights=[20, 80])[0]
     return foe_flees
-
-
-def guessing_game(character):
-    """
-    Generates a random number and asks the user to guess the number.
-
-    :param character: a dictionary representing the game character
-    :precondition: character is a valid dictionary representing the game character
-    :postcondition: runs a guessing game and updates the users hp
-    """
-    print("You have encountered a foe")
-    correct_guess = str(random.choice(range(1, 6)))
-
-    user_guess_is_valid = False
-    user_guess = 0
-
-    while not user_guess_is_valid:
-        user_guess = check_quit(input("You must guess a number between 1 & 5:"))
-        user_guess_is_valid = str(user_guess).strip().isdigit() and str(user_guess) in "12345"
-
-    if user_guess != correct_guess:
-        character["Current HP"] -= 1
-        print("\nYou Guessed Wrong. The correct guess was {}".format(correct_guess))
-        print("Your HP is now {}".format(character["Current HP"]))
-    else:
-        print("\nYou Guessed right! Be on yur merry way")
 
 
 def game_finish(win: bool):
@@ -856,7 +831,6 @@ def game():
             print_board(game_board, character)
             print(red_text("Invalid Move"))
     game_finish(defeated_boss)
-
 
 
 def main():
