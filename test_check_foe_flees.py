@@ -4,7 +4,7 @@ from game import check_foe_flees
 
 
 class TestCheckFoeFlees(TestCase):
-    @patch('random.choice', side_effect=[True])
+    @patch('random.choices', return_value=[True])
     def test_check_foe_flees_true(self, _):
         expected = True
         actual = check_foe_flees()

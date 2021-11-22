@@ -3,6 +3,17 @@ from game import make_board
 
 
 class TestMakeBoard(TestCase):
+    def test_make_board_size(self):
+        expected_size = 625
+        actual_size = len(make_board())
+        self.assertEqual(expected_size, actual_size)
+
+    def test_make_board_boss_location(self):
+        location = (23, 1)
+        expected_value = 'boss'
+        actual = make_board()[location]
+        self.assertEqual(expected_value, actual)
+
     def test_make_board(self):
         expected = {(0, 0): 'none', (1, 0): 'none', (2, 0): 'none', (3, 0): 'none', (4, 0): 'wall',
                     (5, 0): 'none', (6, 0): 'none', (7, 0): 'none', (8, 0): 'none', (9, 0): 'none',
