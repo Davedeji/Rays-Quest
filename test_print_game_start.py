@@ -11,6 +11,7 @@ class TestPrintGameStart(TestCase):
 You have 10hp.
 Your goal is to get to the north east end of the map and defeat the boss.
 Follow the prompts provided by the game to get started.
+You can enter 'q' at any point to quit the game
 Bon Voyage!!
 🚹 - Your character
 🈵 - Walls

@@ -714,6 +714,8 @@ def print_game_start():
     quick_sleep(3)
     print("Follow the prompts provided by the game to get started.")
     quick_sleep(3)
+    print("You can enter 'q' at any point to quit the game")
+    quick_sleep()
     print("Bon Voyage!!")
     quick_sleep()
     print("🚹 - Your character")
